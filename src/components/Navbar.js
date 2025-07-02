@@ -46,21 +46,7 @@ const Navbar = () => {
               </Link>
             </div>
           </div>
-          
-          <div className="hidden md:block">
-            <div className="ml-4 flex items-center md:ml-6">
-              <button className="p-1 rounded-full text-gray-700 hover:text-indigo-600 focus:outline-none transition-colors duration-200">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-              <button className="ml-4 p-1 rounded-full text-gray-700 hover:text-indigo-600 focus:outline-none transition-colors duration-200">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </button>
-            </div>
-          </div>
+        
           
           {/* Mobile menu button */}
           <div className="-mr-2 flex md:hidden">

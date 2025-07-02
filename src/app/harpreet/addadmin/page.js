@@ -46,7 +46,8 @@ export default function AdminRegister() {
 
       setSuccess('Admin created successfully! Redirecting...');
       setTimeout(() => {
-        router.push('/admin/dashboard');
+        localStorage.setItem('adminInfo', JSON.stringify(data));
+        router.push('/harpreet');
       }, 1500);
     } catch (err) {
       setError(err.message);

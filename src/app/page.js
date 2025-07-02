@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Navbar from '../components/Navbar';
 
 export default function Home() {
   const [products, setProducts] = useState([
@@ -30,11 +29,10 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Navbar />
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-24 pb-12 md:pt-32 md:pb-20">
+        <section className="relative pt-10 pb-12 md:pt-32 md:pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative overflow-hidden rounded-xl shadow-2xl">
               <div className="relative h-64 md:h-96">

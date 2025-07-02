@@ -53,7 +53,9 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/admin/dashboard');
+        localStorage.setItem('adminInfo', JSON.stringify(data));
+        router.push('/harpreet');
+        
       } else {
         setError(data.message || 'Login failed');
       }
