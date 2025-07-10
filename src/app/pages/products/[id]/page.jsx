@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiStar, FiChevronLeft, FiChevronRight, FiShoppingCart, FiHeart } from 'react-icons/fi';
-import Navbar from '@/src/components/Navbar';
-import Footer from '../../../../components/footer';
+import Navbar from '../../../../components/Navbar';
 import { use } from 'react';
 
 export default function ProductDetailPage({ params }) {
@@ -356,7 +355,7 @@ export default function ProductDetailPage({ params }) {
           </div>
         </div>
       </div>
-      <Footer />
+
     </>
   );
 }
