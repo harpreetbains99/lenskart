@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Product from "../../../models/lens"
-import connectDB from "../../../lib/dbcollection"
+import connectDB from "../../../lib/dbconection"
 
 export async function GET(request) {
   try {
