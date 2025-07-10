@@ -1,7 +1,7 @@
 'ise client'
 
 import Product from '../../../../models/lens';
-import dbConnect from '../../../../lib/dbcollection';
+import dbConnect from '../../../../lib/dbconection';
 
 export async function GET(request, { params }) {
   const { id } = params;
