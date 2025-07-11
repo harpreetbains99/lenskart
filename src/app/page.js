@@ -4,12 +4,12 @@ import Head from 'next/head';
 
 export default function Home() {
   const [products, setProducts] = useState([
-    { id: 1, name: 'Product 1', category: 'Category A', price: '$19.99' },
-    { id: 2, name: 'Product 2', category: 'Category B', price: '$29.99' },
-    { id: 3, name: 'Product 3', category: 'Category A', price: '$39.99' },
-    { id: 4, name: 'Product 4', category: 'Category C', price: '$49.99' },
-    { id: 5, name: 'Product 5', category: 'Category B', price: '$59.99' },
-    { id: 6, name: 'Product 6', category: 'Category C', price: '$69.99' },
+    { id: 1, name: 'Ray-Ban', category: 'Category A', price: '₹1000',img:"https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752126809/Screenshot_2025-07-10_111948_pek5qz.png"},
+    { id: 2, name: 'Nike', category: 'Category B', price: '₹1200',img:"https://res.cloudinary.com/dd2hbbtnw/image/upload/c_crop,ar_1:1/v1752127202/Screenshot_2025-07-10_112526_oha5er.png" },
+    
+   
+    { id: 3, name: 'oakley', category: 'Category A', price: '₹1500',img:"https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752127350/Screenshot_2025-07-10_112827_fvig1w.png"},
+
   ]);
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -22,7 +22,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div >
+          <div className="min-h-screen bg-gray-50 pt-24">
       <Head>
         <title>Your Brand Name</title>
         <meta name="description" content="Your brand description" />
@@ -32,82 +33,28 @@ export default function Home() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-10 pb-12 md:pt-32 md:pb-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-xl shadow-2xl">
-              <div className="relative h-64 md:h-96">
-                {/* Slides */}
-                <div 
-                  className={`absolute inset-0 transition-opacity duration-1000 ${currentSlide === 0 ? 'opacity-100' : 'opacity-0'}`}
-                  style={{
-                    backgroundImage: "linear-gradient(to right, rgba(79, 70, 229, 0.8), rgba(99, 102, 241, 0.6))",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center px-4">
-                      <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 animate-fadeIn">Summer Collection</h1>
-                      <p className="text-xl md:text-2xl text-white mb-8 animate-fadeIn delay-100">Discover our new arrivals</p>
-                      <button className="bg-white text-indigo-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 animate-fadeIn delay-200">
-                        Shop Now
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div 
-                  className={`absolute inset-0 transition-opacity duration-1000 ${currentSlide === 1 ? 'opacity-100' : 'opacity-0'}`}
-                  style={{
-                    backgroundImage: "linear-gradient(to right, rgba(236, 72, 153, 0.8), rgba(244, 114, 182, 0.6))",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center px-4">
-                      <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 animate-fadeIn">Limited Edition</h1>
-                      <p className="text-xl md:text-2xl text-white mb-8 animate-fadeIn delay-100">Exclusive designs for you</p>
-                      <button className="bg-white text-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 animate-fadeIn delay-200">
-                        Explore
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div 
-                  className={`absolute inset-0 transition-opacity duration-1000 ${currentSlide === 2 ? 'opacity-100' : 'opacity-0'}`}
-                  style={{
-                    backgroundImage: "linear-gradient(to right, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.6))",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center px-4">
-                      <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 animate-fadeIn">Special Offers</h1>
-                      <p className="text-xl md:text-2xl text-white mb-8 animate-fadeIn delay-100">Up to 50% off selected items</p>
-                      <button className="bg-white text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 animate-fadeIn delay-200">
-                        View Deals
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Slide indicators */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
-                  {[0, 1, 2].map((index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${currentSlide === index ? 'bg-white w-6' : 'bg-white bg-opacity-50'}`}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
+        <section className="relative pt-2 pb-12 md:pt-32 md:pb-20 h-120">
+          <div
+          className={`absolute inset-0 h-120 `}
+          style={{
+            backgroundImage: `url('https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752129902/Screenshot_2025-07-10_110950_o3ity6.png')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* White Blur Overlay with Text */}
+          <div className="absolute inset-0 flex items-center justify-center h-full min-h-[16rem] md:min-h-[24rem] lg:min-h-[32rem]">
+            <div className="bg-white/70 backdrop-blur-md p-8 rounded-xl text-center max-w-xl shadow-lg">
+              <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4">Summer Collection</h1>
+              <p className="text-lg md:text-xl text-gray-700 mb-6">Discover our new arrivals</p>
+              <button className="bg-white text-indigo-600 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition duration-300">
+                Shop Now
+              </button>
             </div>
           </div>
+        </div>
+
+
         </section>
 
         {/* Featured Products Section */}
@@ -126,20 +73,14 @@ export default function Home() {
                 >
                   <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200">
                     <div className="h-64 w-full object-cover object-center group-hover:opacity-75 transition-opacity duration-300 flex items-center justify-center">
-                      <svg className="h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                      <img src={product.img}></img>
+                     
                     </div>
                   </div>
                   <div className="p-6">
                     <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
                     <p className="mt-1 text-sm text-gray-500">{product.category}</p>
                     <p className="mt-2 text-lg font-semibold text-indigo-600">{product.price}</p>
-                    <div className="mt-4">
-                      <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300">
-                        Add to Cart
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -285,6 +226,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+    </div>
     </div>
   );
 }

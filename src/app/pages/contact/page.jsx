@@ -199,7 +199,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Call Us</h3>
                   <p className="text-gray-600 mt-1">Speak with our support team</p>
-                  <p className="mt-2 text-indigo-600 font-medium">+1 (800) 123-4567</p>
+                  <p className="mt-2 text-indigo-600 font-medium">6283427681</p>
                 </div>
               </motion.div>
 
@@ -216,7 +216,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Email Us</h3>
                   <p className="text-gray-600 mt-1">Send us an email anytime</p>
-                  <p className="mt-2 text-indigo-600 font-medium">support@lenskart.com</p>
+                  <p className="mt-2 text-indigo-600 font-medium">lens@lenskart.com</p>
                 </div>
               </motion.div>
 
@@ -235,7 +235,7 @@ export default function ContactPage() {
                   <h3 className="text-lg font-semibold text-gray-900">Visit Us</h3>
                   <p className="text-gray-600 mt-1">Find a store near you</p>
                   <p className="mt-2 text-indigo-600 font-medium">
-                    123 Vision Street, Eyewear Plaza, NY 10001
+                    646X+78Q,chandigarh Road, near Oasis hotel,Garhshankar, punjab 144527,india
                   </p>
                 </div>
               </motion.div>
