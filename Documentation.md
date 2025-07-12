@@ -7,7 +7,8 @@ SRC
                         route.js
                      register
                         route.js
-                     product-details\[id]
+                     product-details
+                      [id]
                         route.js
                      productcard
                         route.js
