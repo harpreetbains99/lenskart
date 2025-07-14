@@ -29,6 +29,8 @@ export default function ProductListingPage() {
   const fetchProducts = async (page = 1, filterParams = {}) => {
     try {
       setLoading(true);
+      setError(null);
+      
       controls.start({
         opacity: 0,
         transition: { duration: 0.3 },
@@ -41,15 +43,24 @@ export default function ProductListingPage() {
       }).toString();
 
       const response = await fetch(`/api/productcard?${queryParams}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
 
       if (data.success) {
-        setProducts(data.products);
-        setPagination(data.pagination);
-        setError(null);
+        setProducts(data.products || []);
+        setPagination(data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalProducts: 0,
+          limit: 12,
+        });
 
         const initialIndices = {};
-        data.products.forEach((product) => {
+        (data.products || []).forEach((product) => {
           initialIndices[product._id] = 0;
         });
         setActiveImageIndex(initialIndices);
@@ -62,6 +73,7 @@ export default function ProductListingPage() {
         setError(data.error || 'Failed to fetch products');
       }
     } catch (err) {
+      console.error('Error fetching products:', err);
       setError('Failed to fetch products. Please try again later.');
     } finally {
       setLoading(false);
@@ -69,6 +81,7 @@ export default function ProductListingPage() {
   };
 
   useEffect(() => {
+    console.log('Fetching products with filters:', filters);
     fetchProducts(1, filters);
   }, [filters]);
 
@@ -286,13 +299,13 @@ export default function ProductListingPage() {
             <motion.div
               variants={container}
               initial="hidden"
-              animate={loading ? 'hidden' : 'visible'}
+              animate={loading ? 'hidden' : 'show'}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
             >
               <AnimatePresence>
                 {loading ? (
                   loadingSkeleton
-                ) : (
+                ) : products.length > 0 ? (
                   products.map((product) => (
                     <motion.div
                       key={product._id}
@@ -300,15 +313,15 @@ export default function ProductListingPage() {
                       whileHover={{ y: -5 }}
                       className="bg-white rounded-lg shadow-md overflow-hidden"
                     >
-                      <Link href="/products/${product._id}">
-                        <div className="relative h-36">
+                      <Link href={`/products/${product._id}`}>
+                        <div className="relative h-66">
                           {product.images && product.images.length > 0 ? (
                             <>
                               <Image
                                 src={product.images[activeImageIndex[product._id]]?.url || '/placeholder-image.jpg'}
                                 alt={product.name}
                                 fill
-                                className="object-cover"
+                                className="object-fit"
                                 sizes="(max-width: 768px) 100vw, 25vw"
                               />
                               {product.images.length > 1 && (
@@ -360,7 +373,7 @@ export default function ProductListingPage() {
                         <div className="p-4">
                           <div className="flex justify-between mb-2">
                             <h2 className="text-lg font-semibold">{product.name}</h2>
-                            <span className="text-blue-600">₹${product.price.toFixed(2)}</span>
+                            <span className="text-blue-600">₹{product.price.toFixed(2)}</span>
                           </div>
                           <div className="flex gap-2 mb-2">
                             <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">{product.category}</span>
@@ -383,6 +396,15 @@ export default function ProductListingPage() {
                       </Link>
                     </motion.div>
                   ))
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="col-span-full text-center py-12"
+                  >
+                    <div className="text-gray-500 text-lg mb-4">No products found</div>
+                    <p className="text-gray-400">Try adjusting your filters or search terms.</p>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>

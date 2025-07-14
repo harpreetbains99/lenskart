@@ -4,34 +4,34 @@ SRC
             api
                 admin
                      login
-                        route.js
+                             route.js
                      register
-                        route.js
+                             route.js
                      product-details
-                      [id]
-                        route.js
+                        [id]
+                             route.js
                      productcard
-                        route.js
+                             route.js
             harpreet
-                          addadmin
-                               page.js
-                          globals.css
-                          layout.tsx
-                          page.jsx
+                        addadmin
+                                page.js
+                            globals.css
+                            layout.tsx
+                            page.jsx
             pages
                 about
-                   page.jsx
+                         page.jsx
                 admin-login
-                    page.jsx
+                         page.jsx
                 contact
-                    page.jsx
+                         page.jsx
                 payment-clone
-                    page.jsx
+                         page.jsx
                 products
-                  [id]
-                    page.jsx
+                    [id]
+                         page.jsx
                 product-page
-                    page.jsx
+                         page.jsx
             favicon.ico
             globals.css
             layout.js

@@ -6,8 +6,6 @@ export default function Home() {
   const [products, setProducts] = useState([
     { id: 1, name: 'Ray-Ban', category: 'Category A', price: '₹1000',img:"https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752126809/Screenshot_2025-07-10_111948_pek5qz.png"},
     { id: 2, name: 'Nike', category: 'Category B', price: '₹1200',img:"https://res.cloudinary.com/dd2hbbtnw/image/upload/c_crop,ar_1:1/v1752127202/Screenshot_2025-07-10_112526_oha5er.png" },
-    
-   
     { id: 3, name: 'oakley', category: 'Category A', price: '₹1500',img:"https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752127350/Screenshot_2025-07-10_112827_fvig1w.png"},
 
   ]);
@@ -23,7 +21,7 @@ export default function Home() {
 
   return (
     <div >
-          <div className="min-h-screen bg-gray-50 pt-24">
+          <div className="min-h-screen bg-gray-50 ">
       <Head>
         <title>Your Brand Name</title>
         <meta name="description" content="Your brand description" />
@@ -35,7 +33,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative pt-2 pb-12 md:pt-32 md:pb-20 h-120">
           <div
-          className={`absolute inset-0 h-120 `}
+          className={`absolute inset-0 h-[600px] `}
           style={{
             backgroundImage: `url('https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752129902/Screenshot_2025-07-10_110950_o3ity6.png')`,
             backgroundSize: "cover",
