@@ -43,6 +43,6 @@ SRC
         lib
                 dbconection.js
         models
-                .env.local
-                .gitignore     
+                adminmodels.js
+                lens.js    
 

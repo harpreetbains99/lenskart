@@ -66,9 +66,9 @@ const AboutPage = () => {
           >
             <div className="relative w-full max-w-4xl h-96 rounded-3xl overflow-hidden shadow-2xl">
               <img 
-                src="/about-hero.jpg" 
+                src="https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752470531/Screenshot_2025-07-14_105124_soktul.png" 
                 alt="Lenskart team" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent"></div>
             </div>
