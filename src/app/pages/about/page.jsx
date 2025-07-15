@@ -110,7 +110,7 @@ const AboutPage = () => {
             className="relative h-96 rounded-2xl overflow-hidden shadow-xl"
           >
             <img 
-              src="/about-story.jpg" 
+              src="https://res.cloudinary.com/dd2hbbtnw/image/upload/v1752557819/Screenshot_2025-07-15_110646_ny7goy.png"
               alt="Lenskart early days" 
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
             />
