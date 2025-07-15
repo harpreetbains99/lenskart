@@ -313,7 +313,7 @@ export default function ProductListingPage() {
                       whileHover={{ y: -5 }}
                       className="bg-white rounded-lg shadow-md overflow-hidden"
                     >
-                      <Link href={`/products/${product._id}`}>
+                     <Link href="/products/${product._id}">
                         <div className="relative h-66">
                           {product.images && product.images.length > 0 ? (
                             <>
