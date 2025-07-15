@@ -25,7 +25,6 @@ export default function ProductsPage() {
     priceRange: [0, 1000],
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const controls = useAnimation();
   const searchInputRef = useRef(null);
@@ -123,19 +122,6 @@ export default function ProductsPage() {
     });
   };
 
-  const handleAddToCart = (e, product) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Implement cart logic
-    alert(`${product.name} added to cart`);
-  };
-
-  const handleAddToWishlist = (e, product) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Implement wishlist logic
-    alert(`${product.name} added to wishlist`);
-  };
 
   const openQuickView = (product) => {
     setQuickViewProduct(product);
@@ -199,50 +185,6 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 lg:hidden"
-          >
-            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
-            <motion.div 
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-              className="fixed inset-y-0 left-0 w-5/6 max-w-xs bg-white shadow-xl"
-            >
-              <div className="flex items-center justify-between h-16 px-4 border-b">
-                <Link href="/" className="text-xl font-bold text-indigo-600">
-                  Visionary
-                </Link>
-                <button 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                >
-                  <FiX className="h-6 w-6" />
-                </button>
-              </div>
-              <nav className="p-4 space-y-2">
-                {['Home', 'Shop', 'Collections', 'About', 'Contact'].map((item) => (
-                  <motion.a
-                    key={item}
-                    whileHover={{ x: 5 }}
-                    href="#"
-                    className="block px-3 py-2 text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md text-sm font-medium"
-                  >
-                    {item}
-                  </motion.a>
-                ))}
-              </nav>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Hero Banner */}
       <motion.section 
@@ -279,20 +221,6 @@ export default function ProductsPage() {
               transition={{ delay: 0.6, duration: 0.5 }}
               className="flex flex-col sm:flex-row justify-center gap-4"
             >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 bg-white text-indigo-600 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all"
-              >
-                Shop Now
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 bg-transparent border-2 border-white rounded-lg font-medium hover:bg-white/10 transition-all"
-              >
-                Learn More
-              </motion.button>
             </motion.div>
           </div>
         </div>
@@ -563,44 +491,11 @@ export default function ProductsPage() {
                                 src={product.images[activeImageIndex[product._id]]?.url || '/placeholder-product.jpg'}
                                 alt={product.name}
                                 fill
-                                className="object-cover transition-opacity duration-500 group-hover:opacity-90"
+                                className="object-contain transition-opacity duration-500 group-hover:opacity-90"
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                                 priority={products.indexOf(product) < 4}
                               />
-                              {/* Quick actions overlay */}
-                              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={(e) => handleAddToCart(e, product)}
-                                  className="bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
-                                  aria-label="Add to cart"
-                                >
-                                  <FiShoppingCart className="w-5 h-5" />
-                                </motion.button>
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={(e) => handleAddToWishlist(e, product)}
-                                  className="bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-75"
-                                  aria-label="Add to wishlist"
-                                >
-                                  <FiHeart className="w-5 h-5" />
-                                </motion.button>
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    openQuickView(product);
-                                  }}
-                                  className="bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-100"
-                                  aria-label="Quick view"
-                                >
-                                  <FiSearch className="w-5 h-5" />
-                                </motion.button>
-                              </div>
+                              
                               {/* Image navigation dots */}
                               {product.images.length > 1 && (
                                 <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
@@ -712,14 +607,15 @@ export default function ProductsPage() {
                               </span>
                             </div>
                             
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={(e) => handleAddToCart(e, product)}
-                              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-                            >
-                              Add to Cart
-                            </motion.button>
+                            <Link href={`products/${product._id}`} className="block group">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                              >
+                                BUY NOW
+                              </motion.button>
+                            </Link>
                           </div>
                         </div>
                       </motion.div>
@@ -823,212 +719,8 @@ export default function ProductsPage() {
           )}
         </div>
 
-        {/* Quick View Modal */}
-        <AnimatePresence>
-          {quickViewProduct && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 overflow-y-auto"
-            >
-              <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                  <div 
-                    className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm"
-                    onClick={() => setQuickViewProduct(null)}
-                  ></div>
-                </div>
 
-                <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                  <div className="bg-white p-6 sm:p-8">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-2xl font-bold text-gray-900">{quickViewProduct.name}</h3>
-                      <button
-                        onClick={() => setQuickViewProduct(null)}
-                        className="text-gray-400 hover:text-gray-500 p-1 rounded-full hover:bg-gray-100"
-                      >
-                        <FiX className="h-6 w-6" />
-                      </button>
-                    </div>
-                    
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="relative h-96 rounded-2xl overflow-hidden bg-gray-100">
-                        {quickViewProduct.images && quickViewProduct.images.length > 0 && (
-                          <Image
-                            src={quickViewProduct.images[0]?.url || '/placeholder-product.jpg'}
-                            alt={quickViewProduct.name}
-                            fill
-                            className="object-cover"
-                          />
-                        )}
-                      </div>
-                      
-                      <div>
-                        <div className="flex items-center mb-4">
-                          <div className="flex items-center mr-3">
-                            {[...Array(5)].map((_, i) => (
-                              <FiStar
-                                key={i}
-                                className={`w-5 h-5 ${i < Math.round(quickViewProduct.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {quickViewProduct.numReviews || 0} reviews
-                          </span>
-                        </div>
-                        
-                        <div className="mb-6">
-                          <h4 className="text-xl font-bold text-gray-900 mb-2">
-                            ₹{quickViewProduct.price.toFixed(2)}
-                            {quickViewProduct.originalPrice && (
-                              <span className="text-base text-gray-500 line-through ml-2">
-                                ₹{quickViewProduct.originalPrice.toFixed(2)}
-                              </span>
-                            )}
-                          </h4>
-                          <p className="text-gray-600">{quickViewProduct.description}</p>
-                        </div>
-                        
-                        <div className="mb-6">
-                          <h4 className="text-sm font-medium text-gray-900 mb-2">Details</h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm text-gray-500">Category</p>
-                              <p className="text-sm font-medium">{quickViewProduct.category}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Brand</p>
-                              <p className="text-sm font-medium">{quickViewProduct.brand || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Frame Type</p>
-                              <p className="text-sm font-medium">{quickViewProduct.frameType || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Gender</p>
-                              <p className="text-sm font-medium">{quickViewProduct.gender || 'Unisex'}</p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-4">
-                          <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={(e) => handleAddToCart(e, quickViewProduct)}
-                            className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                          >
-                            Add to Cart
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={(e) => handleAddToWishlist(e, quickViewProduct)}
-                            className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-                          >
-                            <FiHeart className="w-5 h-5" />
-                          </motion.button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </main>
-
-      {/* Newsletter Section */}
-      <section className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Stay Updated</h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">
-              Subscribe to our newsletter for the latest eyewear trends and exclusive offers
-            </p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="flex-1 px-5 py-3 rounded-lg border-0 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 text-gray-900"
-              />
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                type="submit"
-                className="px-6 py-3 bg-white text-indigo-600 rounded-lg font-medium shadow hover:shadow-md transition-all"
-              >
-                Subscribe
-              </motion.button>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">Visionary</h3>
-              <p className="text-gray-400">
-                Premium eyewear for every vision and style need.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-lg font-medium mb-4">Shop</h4>
-              <ul className="space-y-2">
-                {['Eyeglasses', 'Sunglasses', 'Contact Lenses', 'Accessories'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-medium mb-4">Company</h4>
-              <ul className="space-y-2">
-                {['About Us', 'Blog', 'Careers', 'Contact'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-medium mb-4">Support</h4>
-              <ul className="space-y-2">
-                {['FAQ', 'Shipping', 'Returns', 'Privacy Policy'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} Visionary. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              {['Facebook', 'Twitter', 'Instagram', 'Pinterest'].map((social) => (
-                <a key={social} href="#" className="text-gray-400 hover:text-white transition-colors">
-                  {social}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

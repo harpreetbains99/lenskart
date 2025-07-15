@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiStar, FiChevronLeft, FiChevronRight, FiShoppingCart, FiHeart } from 'react-icons/fi';
 
+
 import { use } from 'react';
 
 export default function ProductDetailPage({ params }) {
@@ -23,16 +24,7 @@ export default function ProductDetailPage({ params }) {
         const data = await response.json();
 
         if (data.success) {
-          // If product is a Mongoose document, convert to plain object
-          let prod = data.product;
-          if (prod && typeof prod.toObject === 'function') {
-            prod = prod.toObject();
-          } else if (prod && prod._doc) {
-            prod = prod._doc;
-          }
-          // Ensure images is always an array
-          prod.images = Array.isArray(prod.images) ? prod.images : [];
-          setProduct(prod);
+          setProduct(data.product);
           setError(null);
         } else {
           setError(data.error || 'Failed to fetch product');
@@ -48,23 +40,24 @@ export default function ProductDetailPage({ params }) {
   }, [id]);
 
   const handleNextImage = () => {
-    if (!product?.images || product.images.length === 0) return;
-    setActiveImageIndex((prev) => (prev + 1) % product.images.length);
+    setActiveImageIndex((prev) => 
+      (prev + 1) % product.images.length
+    );
   };
 
   const handlePrevImage = () => {
-    if (!product?.images || product.images.length === 0) return;
-    setActiveImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    setActiveImageIndex((prev) => 
+      (prev - 1 + product.images.length) % product.images.length
+    );
   };
 
   const handleQuantityChange = (value) => {
-    const maxStock = product?.stock || 1;
-    const newValue = Math.max(1, Math.min(maxStock, quantity + value));
+    const newValue = Math.max(1, Math.min(product.stock, quantity + value));
     setQuantity(newValue);
   };
 
   const handleAddToCart = () => {
-    alert(`${quantity} ${product?.name || ''} added to cart`);
+    alert(`${quantity} ${product.name} added to cart`);
   };
 
   if (loading) {
@@ -96,7 +89,7 @@ export default function ProductDetailPage({ params }) {
             </div>
           </div>
         </div>
-  
+   
       </>
     );
   }
@@ -104,7 +97,7 @@ export default function ProductDetailPage({ params }) {
   if (error) {
     return (
       <>
-
+ 
         <div className="min-h-screen bg-gray-50 pt-20">
           <div className="container mx-auto px-4 py-12">
             <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl max-w-md mx-auto text-center shadow-sm">
@@ -118,7 +111,7 @@ export default function ProductDetailPage({ params }) {
             </div>
           </div>
         </div>
-        <Footer />
+     
       </>
     );
   }
@@ -126,7 +119,7 @@ export default function ProductDetailPage({ params }) {
   if (!product) {
     return (
       <>
-
+   
         <div className="min-h-screen bg-gray-50 pt-20">
           <div className="container mx-auto px-4 py-12">
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-4 rounded-xl max-w-md mx-auto text-center shadow-sm">
@@ -140,14 +133,14 @@ export default function ProductDetailPage({ params }) {
             </div>
           </div>
         </div>
-        <Footer />
+   
       </>
     );
   }
 
   return (
     <>
-
+ 
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="container mx-auto px-4 py-12">
           <button
@@ -164,14 +157,14 @@ export default function ProductDetailPage({ params }) {
               <div className="space-y-4">
                 <div className="relative h-96 bg-gray-100 rounded-xl overflow-hidden">
                   <Image
-                    src={(product.images && product.images[activeImageIndex]?.url) || '/placeholder-product.jpg'}
+                    src={product.images[activeImageIndex]?.url || '/placeholder-product.jpg'}
                     alt={product.name}
                     fill
                     className="object-contain"
                     priority
                   />
                   
-                  {product.images && product.images.length > 1 && (
+                  {product.images.length > 1 && (
                     <>
                       <button
                         onClick={handlePrevImage}
@@ -192,9 +185,9 @@ export default function ProductDetailPage({ params }) {
                 </div>
                 
                 <div className="flex gap-2 overflow-x-auto pb-2">
-                  {(product.images || []).map((image, index) => (
+                  {product.images.map((image, index) => (
                     <button
-                      key={image.publicId || index}
+                      key={image.publicId}
                       onClick={() => setActiveImageIndex(index)}
                       className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
                         activeImageIndex === index ? 'border-blue-500' : 'border-transparent'
@@ -363,7 +356,7 @@ export default function ProductDetailPage({ params }) {
           </div>
         </div>
       </div>
-
+     
     </>
   );
 }

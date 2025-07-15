@@ -80,24 +80,7 @@ const PaymentPage = () => {
           transition={{ duration: 0.4 }}
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
         >
-          {/* Order Summary */}
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">Order Summary</h2>
-            <div className="mt-4 space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Premium Lens Package</span>
-                <span className="font-medium">$129.99</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Lens Protection</span>
-                <span className="font-medium">$19.99</span>
-              </div>
-              <div className="flex justify-between pt-3 border-t border-gray-200">
-                <span className="font-semibold text-gray-800">Total</span>
-                <span className="font-bold text-indigo-600">$149.98</span>
-              </div>
-            </div>
-          </div>
+
 
           {/* Payment Tabs */}
           <div className="border-b border-gray-200">

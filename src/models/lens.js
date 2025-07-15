@@ -5,7 +5,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  
   description: {
     type: String,
   },
@@ -23,9 +22,16 @@ const productSchema = new mongoose.Schema({
   },
   images: [
     {
-      type: String, // URLs to the images
+      url: {
+        type: String, 
+        required: true,
+      },
+      publicId: {
+        type: String, 
+        required: true,
+      },
     },
-  ],
+  ], 
   stock: {
     type: Number,
     default: 0,
@@ -50,11 +56,18 @@ const productSchema = new mongoose.Schema({
   },
   reviews: [
     {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      comment: String,
-      rating: Number,
+      rating: {
+        type: Number,
+        min: 1,
+        max: 4,
+        required: true,
+      },
     },
   ],
+  numReviews: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true,
 });
