@@ -1,12 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { CldUploadWidget } from 'next-cloudinary';
+import React from 'react';
 
-const AddProductPage = () => {
+export default function AddProduct() {
   const router = useRouter();
+  const motionDivRef = React.useRef(null);
+  const formRef = React.useRef(null);
+  const isInView = useInView(motionDivRef, { once: false, amount: 0.1 });
+  const [isDragging, setIsDragging] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -18,436 +24,743 @@ const AddProductPage = () => {
     frameType: 'Full Rim',
     gender: 'Unisex',
     color: '',
-    material: ''
+    material: '',
+    reviews: [],
+    numReviews: 0,
+    rating: 0,
   });
-  const [imageUrls, setImageUrls] = useState([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [activeField, setActiveField] = useState(null);
+  const [newReviewRating, setNewReviewRating] = useState(1);
+
+  // Animations
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 10,
+      },
+    },
+  };
+
+  const fieldFocus = {
+    focus: {
+      scale: 1.01,
+      transition: { duration: 0.1 },
+    },
+  };
+
+  const dropZone = {
+    idle: { borderColor: '#d1d5db', backgroundColor: '#f9fafb' },
+    dragging: { borderColor: '#3b82f6', backgroundColor: '#eff6ff' },
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'price' || name === 'stock' ? Number(value) : value
+      [name]: value,
     }));
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length + imageUrls.length > 5) {
-      setError('Maximum 5 images allowed');
-      return;
-    }
+  const handleNumberChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: Number(value),
+    }));
+  };
 
-    try {
-      const uploadPromises = files.map(file => {
-        // In a real app, you would upload to Cloudinary/S3 here
-        // This is just a mock implementation
-        return new Promise(resolve => {
-          setTimeout(() => {
-            const mockUrl = URL.createObjectURL(file);
-            resolve(mockUrl);
-          }, 500);
-        });
-      });
-
-      const newUrls = await Promise.all(uploadPromises);
-      setImageUrls(prev => [...prev, ...newUrls]);
-      setFormData(prev => ({
+  const handleImageUpload = (result) => {
+    if (result.event === 'success') {
+      const { secure_url, public_id } = result.info;
+      setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, ...newUrls]
+        images: [...prev.images, { url: secure_url, publicId: public_id }],
       }));
-      setError('');
-    } catch (err) {
-      setError('Image upload failed');
     }
   };
 
-  const removeImage = (index) => {
-    const newUrls = [...imageUrls];
-    newUrls.splice(index, 1);
-    setImageUrls(newUrls);
-    setFormData(prev => ({
+  const handleRemoveImage = (index) => {
+    setFormData((prev) => ({
       ...prev,
-      images: newUrls
+      images: prev.images.filter((_, i) => i !== index),
     }));
+  };
+
+  const handleAddReview = () => {
+    if (newReviewRating >= 1 && newReviewRating <= 4) {
+      setFormData((prev) => ({
+        ...prev,
+        reviews: [...prev.reviews, { rating: newReviewRating }],
+        numReviews: prev.reviews.length + 1,
+        rating: prev.reviews.length
+          ? (
+              (prev.rating * prev.reviews.length + newReviewRating) /
+              (prev.reviews.length + 1)
+            ).toFixed(1)
+          : newReviewRating,
+      }));
+      setNewReviewRating(1);
+    } else {
+      setError('Review rating must be between Hawkins between 1 and 4');
+    }
+  };
+
+  const handleRemoveReview = (index) => {
+    setFormData((prev) => {
+      const newReviews = prev.reviews.filter((_, i) => i !== index);
+      const newNumReviews = newReviews.length;
+      const newRating =
+        newReviews.length > 0
+          ? (
+              newReviews.reduce((sum, review) => sum + review.rating, 0) /
+              newReviews.length
+            ).toFixed(1)
+          : 0;
+      return {
+        ...prev,
+        reviews: newReviews,
+        numReviews: newNumReviews,
+        rating: newRating,
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
+    setSuccess('');
 
     try {
-      // Replace with your actual API endpoint
-      await axios.post('/api/products', formData);
-      router.push('/admin/products');
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'images' || key === 'reviews') {
+          data.append(key, JSON.stringify(value));
+        } else {
+          data.append(key, value);
+        }
+      });
+
+      const response = await fetch('/api/admin/addproduct', {
+        method: 'POST',
+        body: data,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add product');
+      }
+
+      setSuccess('Product added successfully!');
+      setTimeout(() => router.push('/prabjot'), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create product');
+      setError(err.message || 'Failed to add product. Please try again.');
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Animation variants
-  const container = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.5 }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={container}
-        className="max-w-4xl mx-auto"
-      >
-        <motion.div variants={item} className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Add New Product</h1>
-          <p className="mt-2 text-gray-600">Fill in the details for your new eyewear product</p>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 pt-28">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-center mb-10"
+        >
+          <h1 className="text-3xl font-bold text-black mb-2">
+            Add New Product
+          </h1>
+          <p className="text-black max-w-2xl mx-auto">
+            Fill out the form to expand your eyewear collection
+          </p>
         </motion.div>
 
-        <motion.form
-          variants={item}
-          onSubmit={handleSubmit}
-          className="bg-white shadow rounded-lg p-6 sm:p-8"
-        >
+        {/* Status messages */}
+        <AnimatePresence>
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              key="error"
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-50 text-red-700 rounded-md"
+              exit={{ opacity: 0 }}
+              className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-black rounded"
             >
-              {error}
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {error}
+              </div>
             </motion.div>
           )}
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Product Name */}
-            <motion.div variants={item}>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Product Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
+          {success && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-black rounded"
+            >
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                {success}
+              </div>
             </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Brand */}
-            <motion.div variants={item}>
-              <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
-                Brand
-              </label>
-              <input
-                type="text"
-                id="brand"
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </motion.div>
-
-            {/* Category */}
-            <motion.div variants={item}>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                Category *
-              </label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+        {/* Main form */}
+        <motion.div
+          ref={motionDivRef}
+          variants={container}
+          initial="hidden"
+          animate={isInView ? 'show' : 'hidden'}
+          className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
+        >
+          <form ref={formRef} onSubmit={handleSubmit} className="p-6 sm:p-8">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6">
+              {/* Product Name */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-6"
+                onFocus={() => setActiveField('name')}
+                onBlur={() => setActiveField(null)}
               >
-                <option value="Eyeglasses">Eyeglasses</option>
-                <option value="Sunglasses">Sunglasses</option>
-                <option value="Contact Lenses">Contact Lenses</option>
-                <option value="Accessories">Accessories</option>
-              </select>
-            </motion.div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Product Name *
+                </label>
+                <motion.input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'name' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                  required
+                />
+              </motion.div>
 
-            {/* Frame Type */}
-            {formData.category === 'Eyeglasses' || formData.category === 'Sunglasses' ? (
-              <motion.div variants={item}>
-                <label htmlFor="frameType" className="block text-sm font-medium text-gray-700 mb-1">
+              {/* Description */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-6"
+                onFocus={() => setActiveField('description')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Description
+                </label>
+                <motion.textarea
+                  name="description"
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'description' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                />
+              </motion.div>
+
+              {/* Price */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-2"
+                onFocus={() => setActiveField('price')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Price (₹) *
+                </label>
+                <motion.div
+                  variants={fieldFocus}
+                  animate={activeField === 'price' ? 'focus' : ''}
+                  className="relative"
+                >
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-black">₹</span>
+                  </div>
+                  <input
+                    type="number"
+                    name="price"
+                    min="0"
+                    step="1"
+                    value={formData.price}
+                    onChange={handleNumberChange}
+                    className="w-full pl-8 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                    required
+                  />
+                </motion.div>
+              </motion.div>
+
+              {/* Stock */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-2"
+                onFocus={() => setActiveField('stock')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Stock Quantity
+                </label>
+                <motion.input
+                  type="number"
+                  name="stock"
+                  min="0"
+                  value={formData.stock}
+                  onChange={handleNumberChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'stock' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                />
+              </motion.div>
+
+              {/* Category */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-2"
+                onFocus={() => setActiveField('category')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Category *
+                </label>
+                <motion.select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'category' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tZG93biI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+')] bg-no-repeat bg-[center_right_0.75rem] text-black"
+                  required
+                >
+                  <option value="Eyeglasses">Eyeglasses</option>
+                  <option value="Sunglasses">Sunglasses</option>
+                  <option value="Contact Lenses">Contact Lenses</option>
+                  <option value="Accessories">Accessories</option>
+                </motion.select>
+              </motion.div>
+
+              {/* Brand */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-3"
+                onFocus={() => setActiveField('brand')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Brand
+                </label>
+                <motion.input
+                  type="text"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'brand' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                />
+              </motion.div>
+
+              {/* Frame Type */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-3"
+                onFocus={() => setActiveField('frameType')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
                   Frame Type
                 </label>
-                <select
-                  id="frameType"
+                <motion.select
                   name="frameType"
                   value={formData.frameType}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  variants={fieldFocus}
+                  animate={activeField === 'frameType' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tZG93biI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+')] bg-no-repeat bg-[center_right_0.75rem] text-black"
                 >
                   <option value="Full Rim">Full Rim</option>
                   <option value="Half Rim">Half Rim</option>
                   <option value="Rimless">Rimless</option>
-                </select>
+                </motion.select>
               </motion.div>
-            ) : null}
 
-            {/* Gender */}
-            <motion.div variants={item}>
-              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
-                Gender
-              </label>
-              <select
-                id="gender"
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              {/* Gender */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-2"
+                onFocus={() => setActiveField('gender')}
+                onBlur={() => setActiveField(null)}
               >
-                <option value="Men">Men</option>
-                <option value="Women">Women</option>
-                <option value="Unisex">Unisex</option>
-              </select>
-            </motion.div>
-
-            {/* Color */}
-            <motion.div variants={item}>
-              <label htmlFor="color" className="block text-sm font-medium text-gray-700 mb-1">
-                Color
-              </label>
-              <input
-                type="text"
-                id="color"
-                name="color"
-                value={formData.color}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </motion.div>
-
-            {/* Material */}
-            <motion.div variants={item}>
-              <label htmlFor="material" className="block text-sm font-medium text-gray-700 mb-1">
-                Material
-              </label>
-              <input
-                type="text"
-                id="material"
-                name="material"
-                value={formData.material}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </motion.div>
-
-            {/* Price */}
-            <motion.div variants={item}>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                Price *
-              </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  min="0"
-                  step="0.01"
-                  value={formData.price}
+                <label className="block text-sm font-medium text-black mb-1">
+                  Gender
+                </label>
+                <motion.select
+                  name="gender"
+                  value={formData.gender}
                   onChange={handleChange}
-                  required
-                  className="w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  variants={fieldFocus}
+                  animate={activeField === 'gender' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tZG93biI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+')] bg-no-repeat bg-[center_right_0.75rem] text-black"
+                >
+                  <option value="Men">Men</option>
+                  <option value="Women">Women</option>
+                  <option value="Unisex">Unisex</option>
+                </motion.select>
+              </motion.div>
+
+              {/* Color */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-2"
+                onFocus={() => setActiveField('color')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Color
+                </label>
+                <motion.input
+                  type="text"
+                  name="color"
+                  value={formData.color}
+                  onChange={handleChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'color' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
                 />
-              </div>
-            </motion.div>
+              </motion.div>
 
-            {/* Stock */}
-            <motion.div variants={item}>
-              <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
-                Stock Quantity
-              </label>
-              <input
-                type="number"
-                id="stock"
-                name="stock"
-                min="0"
-                value={formData.stock}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </motion.div>
+              {/* Material */}
+              <motion.div
+                variants={item}
+                className="sm:col-span-2"
+                onFocus={() => setActiveField('material')}
+                onBlur={() => setActiveField(null)}
+              >
+                <label className="block text-sm font-medium text-black mb-1">
+                  Material
+                </label>
+                <motion.input
+                  type="text"
+                  name="material"
+                  value={formData.material}
+                  onChange={handleChange}
+                  variants={fieldFocus}
+                  animate={activeField === 'material' ? 'focus' : ''}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                />
+              </motion.div>
 
-            {/* Description */}
-            <motion.div variants={item} className="sm:col-span-2">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={4}
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </motion.div>
-
-            {/* Image Upload */}
-            <motion.div variants={item} className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Images (Max 5)
-              </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
+              {/* Reviews */}
+              <motion.div variants={item} className="sm:col-span-6">
+                <label className="block text-sm font-medium text-black mb-1">
+                  Reviews
+                </label>
+                <div className="flex space-x-4 mb-4">
+                  <motion.select
+                    value={newReviewRating}
+                    onChange={(e) => setNewReviewRating(Number(e.target.value))}
+                    variants={fieldFocus}
+                    animate={activeField === 'reviewRating' ? 'focus' : ''}
+                    className="w-32 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-black"
+                    onFocus={() => setActiveField('reviewRating')}
+                    onBlur={() => setActiveField(null)}
                   >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none"
-                    >
-                      <span>Upload images</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        className="sr-only"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                      />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                    {[1, 2, 3, 4].map((rating) => (
+                      <option key={rating} value={rating}>
+                        {rating} Star{rating > 1 ? 's' : ''}
+                      </option>
+                    ))}
+                  </motion.select>
+                  <motion.button
+                    type="button"
+                    onClick={handleAddReview}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all"
+                  >
+                    Add Review
+                  </motion.button>
                 </div>
-              </div>
+                {formData.reviews.length > 0 && (
+                  <motion.div variants={item} className="mt-4">
+                    <p className="text-sm text-black mb-2">
+                      Average Rating: {formData.rating} ({formData.numReviews}{' '}
+                      {formData.numReviews === 1 ? 'Review' : 'Reviews'})
+                    </p>
+                    <div className="space-y-2">
+                      {formData.reviews.map((review, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                        >
+                          <span className="text-black">
+                            {review.rating} Star{review.rating > 1 ? 's' : ''}
+                          </span>
+                          <motion.button
+                            type="button"
+                            onClick={() => handleRemoveReview(index)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="bg-red-500 text-white rounded-full p-1.5"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </motion.button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
 
-              {/* Image Preview */}
-              {imageUrls.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {imageUrls.map((url, index) => (
+              {/* Image Upload */}
+              <motion.div variants={item} className="sm:col-span-6">
+                <label className="block text-sm font-medium text-black mb-1">
+                  Product Images
+                </label>
+                <CldUploadWidget
+                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                  options={{
+                    multiple: true,
+                    folder: 'products',
+                    maxFiles: 5,
+                    resourceType: 'image',
+                    clientAllowedFormats: ['png', 'jpg', 'jpeg', 'gif', 'svg'],
+                    maxFileSize: 10000000, // 10MB
+                  }}
+                  onSuccess={handleImageUpload}
+                  onDragEnter={() => setIsDragging(true)}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={() => setIsDragging(false)}
+                >
+                  {({ open }) => (
                     <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="relative group"
+                      variants={dropZone}
+                      animate={isDragging ? 'dragging' : 'idle'}
+                      className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all"
+                      onClick={() => open()}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        open();
+                      }}
                     >
-                      <img
-                        src={url}
-                        alt={`Product preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
+                      <div className="flex flex-col items-center justify-center space-y-2">
                         <svg
-                          className="w-4 h-4"
+                          className="mx-auto h-12 w-12 text-gray-400"
                           fill="none"
-                          stroke="currentColor"
                           viewBox="0 0 24 24"
+                          stroke="currentColor"
                         >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
+                            strokeWidth={1.5}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                           />
                         </svg>
-                      </button>
+                        <div>
+                          <p className="text-sm text-black">
+                            <span className="font-medium text-blue-600 hover:text-blue-500">
+                              Click to upload
+                            </span>{' '}
+                            or drag and drop
+                          </p>
+                          <p className="text-xs text-black mt-1">
+                            SVG, PNG, JPG, or GIF (max. 10MB, up to 5 images)
+                          </p>
+                          {isDragging && (
+                            <p className="text-xs text-blue-600 mt-1">
+                              Drop images here
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          </div>
-
-          {/* Form Actions */}
-          <motion.div
-            variants={item}
-            className="mt-8 flex justify-end space-x-3"
-          >
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => router.push('/admin/products')}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Cancel
-            </motion.button>
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isSubmitting}
-              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isSubmitting ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'} focus:outline-none`}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
+                  )}
+                </CldUploadWidget>
+                {formData.images.length > 0 && (
+                  <motion.div
+                    variants={item}
+                    className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
+                    {formData.images.map((image, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="relative"
+                      >
+                        <img
+                          src={image.url}
+                          alt={`Uploaded ${index + 1}`}
+                          className="w-full h-28 object-cover rounded-md"
+                        />
+                        <motion.button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1"
+                        >
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Form actions */}
+            <motion.div
+              variants={item}
+              className="mt-8 flex justify-end space-x-3"
+            >
+              <motion.button
+                type="button"
+                onClick={() => router.push('/admin/products')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium text-black border border-gray-300 bg-white hover:bg-gray-50 transition-all"
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                type="submit"
+                disabled={isSubmitting}
+                whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+                whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-all ${
+                  isSubmitting
+                    ? 'bg-blue-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <svg
+                      className="h-4 w-4 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
                       stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Saving...
-                </span>
-              ) : (
-                'Save Product'
-              )}
-            </motion.button>
-          </motion.div>
-        </motion.form>
-      </motion.div>
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    Add Product
+                  </span>
+                )}
+              </motion.button>
+            </motion.div>
+          </form>
+        </motion.div>
+      </div>
     </div>
   );
-};
-
-export default AddProductPage;
+}
